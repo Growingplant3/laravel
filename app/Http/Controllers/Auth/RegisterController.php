@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Socialite\Facades\Socialite;
 
 class RegisterController extends Controller
 {
@@ -50,7 +52,7 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'alpha_num', 'min:3', 'max:16', 'unique:users'], //-- この行を変更
+            'name' => ['required', 'string', 'alpha_num', 'min:3', 'max:16', 'unique:users'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -68,6 +70,19 @@ class RegisterController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+        ]);
+    }
+
+    public function showProviderUserRegistrationForm(Request $request, string $provider)
+    {
+        $token = $request->token;
+
+        $providerUser = Socialite::driver($provider)->userFromToken($token);
+
+        return view('auth.social_register', [
+            'provider' => $provider,
+            'email' => $providerUser->getEmail(),
+            'token' => $token,
         ]);
     }
 }
